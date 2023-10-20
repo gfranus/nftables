@@ -1,7 +1,7 @@
 galaxy_info:
   author: Grzegorz Franus
   description: Ansible role that configures the Linux netfilter with nftables commandline interface.
-  license: GPLv3
+  license: MIT
 
   min_ansible_version: 2.13
 
