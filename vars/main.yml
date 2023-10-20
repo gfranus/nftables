@@ -1,0 +1,11 @@
+# General variables for role
+nftables_service_name: nftables
+nftables_package_name: nftables
+nftables_rules_directory_path: /etc/nftables
+nftables_log_directory_path: /var/log/nftables
+
+# logrotate related vars
+nftables_logrotate_config_path: /etc/logrotate.d/nftables
+
+# rsyslog related vars
+nftables_rsyslog_config_path: /etc/rsyslog.d/51-nftables.conf

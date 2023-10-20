@@ -1,0 +1,16 @@
+{{ ansible_managed | comment }}
+
+{{ nftables_log_directory_path }}/nftables.log  {
+  {{ nftables_logrotate_options.frequency }}
+  rotate {{ nftables_logrotate_options.count }}
+  missingok
+  compress
+  copytruncate
+
+  # Add date to archiv log files
+  dateext
+  dateformat .%Y-%m-%d
+
+  # Archiv log directory
+  olddir {{ nftables_logrotate_options.archiv_directory_path }}
+}

@@ -1,0 +1,22 @@
+- name: nftables_cache | Check if apt cache is out of date and redownload if needed
+  apt:
+    update_cache: yes
+  changed_when: false
+  when: >
+    ansible_os_family | lower == "debian"
+
+- name: nftables_cache | Check if dnf cache is out of date and redownload if needed
+  dnf:
+    update_cache: yes
+  changed_when: false
+  when: >
+    ansible_os_family | lower == "redhat" and
+    ansible_distribution_major_version >= '8'
+
+- name: nftables_cache | Check if yum cache is out of date and redownload if needed
+  yum:
+    update_cache: yes
+  changed_when: false
+  when: >
+    ansible_os_family | lower == "redhat" and
+    ansible_distribution_major_version < '8'

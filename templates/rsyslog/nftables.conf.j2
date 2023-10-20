@@ -1,0 +1,5 @@
+{{ ansible_managed | comment }}
+
+# logging nftables log to the separate files.
+:msg, contains, "[nftables]" {{ nftables_log_directory_path }}/nftables.log
+& stop

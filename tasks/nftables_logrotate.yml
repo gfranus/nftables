@@ -1,0 +1,39 @@
+- name: nftables_logrotate | Ensure group '{{ default_log_directory_group_name }}' exists
+  group:
+    name: "{{ default_log_directory_group_name }}"
+    state: present
+
+- name: nftables_logrotate | Ensure archiv log directory exists
+  file:
+    path: "{{ nftables_logrotate_options.archiv_directory_path }}"
+    state: directory
+    mode: "{{ default_log_directory_mode }}"
+    group: "{{ default_log_directory_group_name }}"
+    owner: root
+  when: >
+    ansible_os_family | lower == "redhat"
+
+- name: nftables_logrotate | Ensure archiv log directory exists
+  file:
+    path: "{{ nftables_logrotate_options.archiv_directory_path }}"
+    state: directory
+    mode: "{{ default_log_directory_mode }}"
+    group: "{{ default_log_directory_group_name }}"
+    owner: syslog
+  when: >
+    ansible_os_family | lower == "debian"
+
+- name: nftables_logrotate | Set default ACL on archiv log directory
+  ansible.posix.acl:
+    path: "{{ nftables_logrotate_options.archiv_directory_path }}"
+    etype: "{{ default_directory_acl_etype }}"
+    permissions: "{{ default_directory_acl_permissions }}"
+    default: true
+    state: present
+
+- name: nftables_logrotate | Deploy logrotate config file for nftables
+  template:
+    src: "templates/logrotate/nftables.conf.j2"
+    dest: "{{ nftables_logrotate_config_path }}"
+    owner: root
+    mode: 0644

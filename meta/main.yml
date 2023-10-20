@@ -1,0 +1,27 @@
+galaxy_info:
+  author: Grzegorz Franus
+  description: Ansible role that configures the Linux netfilter with nftables commandline interface.
+  license: GPLv3
+
+  min_ansible_version: 2.13
+
+  platforms:
+    - name: EL
+      versions:
+        - 8
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+    - name: Debian
+      versions:
+        - buster
+
+  galaxy_tags:
+    - nftables
+    - nft
+    - netfilter
+    - firewall
+    - security
+
+dependencies: []

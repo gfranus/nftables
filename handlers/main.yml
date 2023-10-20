@@ -1,0 +1,9 @@
+- name: Restart rsyslog service
+  service:
+    name: rsyslog
+    state: restarted
+
+- name: Restart nftables service
+  service:
+    name: "{{ nftables_service_name }}"
+    state: restarted

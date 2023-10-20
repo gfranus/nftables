@@ -1,0 +1,4 @@
+# nftables configuration file
+nftables_config_path: /etc/nftables.conf
+# system log file
+nftables_system_log_path: /var/log/syslog

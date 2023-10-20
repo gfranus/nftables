@@ -1,0 +1,17 @@
+- name: nftables_rules | Deploy nftables base rules file 
+  template:
+    src: templates/rules/main.rules.j2
+    dest: "{{ nftables_rules_directory_path }}/main.rules"
+    owner: root
+    group: root
+    mode: 0600
+    validate: nft -c -f %s
+  register: _nftables_rules_
+
+- name: nftables_rules | Force restart nftables service
+  shell: >
+    sleep 5s && systemctl restart {{ nftables_service_name }}
+  async: 10
+  poll: 0
+  when: >
+    _nftables_rules_.changed | default(false)

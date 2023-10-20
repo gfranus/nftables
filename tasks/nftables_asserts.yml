@@ -1,0 +1,11 @@
+- name: nftables_asserts | Test if nftables_role_action is defined
+  assert:
+    that:
+      - nftables_role_action is defined
+    quiet: yes
+
+- name: nftables_asserts | Test if nftables_configure_logrotate is defined
+  assert:
+    that:
+      - nftables_configure_logrotate is defined
+    quiet: yes

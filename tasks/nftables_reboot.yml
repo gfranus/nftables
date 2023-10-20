@@ -1,0 +1,32 @@
+- name: nftables_reboot | Prompt for rebooting
+  pause:
+    prompt: "System reboot is required. Press ENTER to reboot system now, or Ctrl+C to abort"
+
+- name: nftables_reboot | Force reboot OS
+  shell: sleep 2 && shutdown -r now "{{ default_reboot_message }}"
+  async: 1
+  poll: 0
+  ignore_errors: yes
+
+- name: nftables_reboot | Waiting for openssh-server to stop
+  pause:
+    seconds: 5
+
+- name: nftables_reboot | Waiting for host
+  wait_for_connection:
+    connect_timeout: "{{ default_reboot_connect_timeout }}"
+    sleep: "{{ default_reboot_wait_ctimeout }}"
+    delay: "{{ default_reboot_wait_delay }}"
+    timeout: "{{ default_reboot_wait_timeout }}"
+  when: default_reboot_wait | bool
+  register: _reboot_result_
+
+- name: nftables_reboot | Interval before next task
+  pause:
+    seconds: "{{ default_reboot_interval_seconds }}"
+  when: >
+    default_reboot_interval | bool
+
+- name: nftables_reboot | Display reboot time
+  debug:
+    msg: "The system rebooted in {{ _reboot_result_.elapsed }} seconds."

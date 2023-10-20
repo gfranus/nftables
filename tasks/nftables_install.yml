@@ -1,0 +1,11 @@
+- name: nftables_install | Install nftables package
+  package: 
+    name: "{{ nftables_package_name }}"
+    state: present
+
+- name: nftables_install | Enable nftables service on system startup
+  service:
+    name: "{{ nftables_service_name }}"
+    enabled: true
+  when: >
+    nftables_service_enabled | bool

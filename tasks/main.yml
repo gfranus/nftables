@@ -1,0 +1,78 @@
+- name: nftables | nftables_asserts | Perform Conditional Tasks
+  import_tasks: nftables_asserts.yml
+  run_once: yes
+  delegate_to: localhost
+  tags:
+    - always
+    - asserts
+
+- name: nftables | include_vars | Gather OS specific variables
+  include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      paths:
+        - "{{ role_path }}/vars"
+  tags:
+    - always
+    - vars
+
+- name: nftables | nftables_cache | Update packages cache
+  include_tasks: nftables_cache.yml
+  when: >
+    nftables_role_action in ['all', 'cache']
+  tags:
+    - always
+    - package-cache
+
+- name: nftables | nftables_requirements | Make sure that system meets requirements
+  include_tasks: nftables_requirements.yml
+  when: >
+    nftables_role_action in ['all', 'requirements']
+  tags:
+    - always
+    - requirements
+
+- name: nftables | nftables_reboot | Reboot system
+  include_tasks: nftables_reboot.yml
+  when: >
+    nftables_reboot_required | default(false)
+  tags:
+    - always
+    - reboot
+
+- name: nftables | nftables_install | Install nftables package
+  ansible.builtin.include_tasks: nftables_install.yml
+  when: >
+    nftables_role_action in ['all', 'install']
+  tags:
+    - always
+    - install
+
+- name: nftables | nftables_configure | Configure nftables service
+  ansible.builtin.include_tasks: nftables_configure.yml
+  when: >
+    nftables_role_action in ['all', 'configure']
+  tags:
+    - always
+    - configure
+
+- name: nftables | nftables_rules | Deploy rules for nftables 
+  ansible.builtin.include_tasks: nftables_rules.yml
+  when: >
+    nftables_role_action in ['all', 'rules']
+  tags:
+    - always
+    - rules
+
+- name: nftables | nftables_logrotate | Configure logrotate for nftables service
+  ansible.builtin.include_tasks: nftables_logrotate.yml
+  when: >
+    nftables_role_action in ['all', 'logrotate'] and 
+    nftables_configure_logrotate | bool
+  tags:
+    - always
+    - logrotate

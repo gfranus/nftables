@@ -1,0 +1,104 @@
+- name: nftables_requirements | Ensure ACL package is installed
+  package: 
+    name: acl
+    state: present
+
+- name: nftables_requirements | Ensure rsyslog package is installed
+  package: 
+    name: rsyslog
+    state: present
+  register: _nftables_rsyslog_package_
+
+- name: nftables_requirements | Ensure rsyslog service is running and enabled
+  service:
+    name: rsyslog
+    state: started
+    enabled: yes
+  register: _nftables_rsyslog_status_
+
+- name: nftables_requirements | Check if system need reboot
+  set_fact:
+    nftables_reboot_required: true
+  when: >
+    _nftables_rsyslog_package_.changed | default(false) or
+    _nftables_rsyslog_status_.changed | default(false)
+
+- name: nftables_requirements | Check whether a firewalld service exists and is enabled
+  shell: >-
+    systemctl list-unit-files --state=enabled --type=service | grep "^firewalld.service .* enabled$"
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+  register: _firewalld_service_check_
+
+- name: nftables_requirements | Stop and disable firewalld service
+  service:
+    name: firewalld
+    enabled: false
+    state: stopped
+  retries: 3
+  delay: 5
+  when: >
+    _firewalld_service_check_.rc is defined and
+    _firewalld_service_check_.rc == 0
+
+- name: nftables_requirements | Check whether a iptables service exists and is enabled
+  shell: >-
+    systemctl list-unit-files --state=enabled --type=service | grep "^iptables.service .* enabled$"
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+  register: _iptables_service_check_
+
+- name: nftables_requirements | Stop and disable iptables service
+  service:
+    name: iptables
+    enabled: false
+    state: stopped
+  retries: 3
+  delay: 5
+  when: >
+    _iptables_service_check_.rc is defined and
+    _iptables_service_check_.rc == 0
+
+- name: nftables_requirements | Check whether a netfilter-persistent service exists and is enabled
+  shell: >-
+    systemctl list-unit-files --state=enabled --type=service | grep "^netfilter-persistent.service .* enabled$"
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+  register: _netfilter_persistent_service_check_
+
+- name: nftables_requirements | Stop and disable netfilter-persistent service
+  service:
+    name: netfilter-persistent
+    enabled: false
+    state: stopped
+  retries: 3
+  delay: 5
+  when: >
+    _netfilter_persistent_service_check_.rc is defined and
+    _netfilter_persistent_service_check_.rc == 0
+
+- name: nftables_requirements | Check whether a ufw service exists and is enabled
+  shell: >-
+    systemctl list-unit-files --state=enabled --type=service | grep "^ufw.service .* enabled$"
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+  register: _ufw_service_check_
+
+- name: nftables_requirements | Stop and disable ufw service
+  service:
+    name: ufw
+    enabled: false
+    state: stopped
+  retries: 3
+  delay: 5
+  when: >
+    _ufw_service_check_.rc is defined and
+    _ufw_service_check_.rc == 0

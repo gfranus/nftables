@@ -1,0 +1,123 @@
+{{ ansible_managed | comment }}
+
+#!/sbin/nft -f
+ 
+# Flush ruleset
+flush ruleset
+
+#
+# ---------------------- BASIC CHAINS ---------------------- #
+#
+
+# Create inet table
+add table inet filter
+
+# Create main chains
+add chain inet filter input-filter-chain { type filter hook input priority 0 ; policy {{ nftables_input_default_policy }}; } 
+add chain inet filter forward-filter-chain { type filter hook forward priority 0 ; policy {{ nftables_forward_default_policy }}; } 
+add chain inet filter output-filter-chain { type filter hook output priority 0 ; policy {{ nftables_output_default_policy }}; }
+
+
+#
+# ---------------------- CHAIN : GLOBAL ---------------------- #
+#
+
+# Create additional chain: global
+add chain inet filter global
+
+# Allow Established/Related
+add rule inet filter global ip protocol tcp ct state { established, related } counter accept comment "Accept established/related TCP packets"
+add rule inet filter global ip protocol udp ct state { established, related } counter accept comment "Accept established/related UDP packets"
+add rule inet filter global ip protocol icmp ct state { established, related } counter accept comment "Accept established/related ICMP packets"
+
+
+#
+# ---------------------- RULES : ONLY INPUT ---------------------- #
+#
+
+# Drop Invalid Connections
+add rule inet filter input-filter-chain ct state { invalid } counter drop comment "Drop invalid packets"
+
+# Allow loopback
+add rule inet filter input-filter-chain iif lo accept comment "Accept connections from loopback"
+add rule inet filter input-filter-chain iif != lo ip daddr 127.0.0.1/8 counter drop comment "Drop connections to loopback not coming from loopback"
+add rule inet filter input-filter-chain iif != lo ip6 daddr ::1/128 counter drop comment "Drop connections to loopback not coming from loopback"
+
+# Allow chain global
+add rule inet filter input-filter-chain jump global
+
+{% if nftables_input_ping_enable is true -%}
+# Allow ping
+add rule inet filter input-filter-chain meta nfproto ipv4 icmp type { echo-request } limit rate {{ nftables_input_ping_limit_rate }} counter accept comment "Accept IPv4 ICMP echo-request packets"
+{%- endif %}
+
+
+{% if nftables_input_chain_rules is defined -%}
+{% if nftables_input_chain_rules|length -%}
+# Allow declared input rules
+{% for rule in nftables_input_chain_rules -%}
+add rule inet filter input-filter-chain {{ rule }}
+{% endfor %}
+{% endif %}
+{% endif %}
+
+{% if nftables_log_input_dropped is true -%}
+# Log all input dropped packets
+add rule inet filter input-filter-chain log prefix "[nftables] : drop : input : " counter drop comment "Log and count dropped packets";
+{%- endif %}
+
+
+#
+# ---------------------- RULES : ONLY FORWARD ---------------------- #
+#
+
+# Drop Invalid Connections
+add rule inet filter forward-filter-chain ct state { invalid } counter drop comment "Drop invalid packets"
+
+{% if nftables_forward_chain_rules is defined -%}
+{% if nftables_forward_chain_rules|length -%}
+# Allow declared forward rules
+{% for rule in nftables_forward_chain_rules -%}
+add rule inet filter forward-filter-chain {{ rule }}
+{% endfor %}
+{% endif %}
+{% endif %}
+
+{% if nftables_log_forward_dropped is true -%}
+# Log all output dropped packets
+add rule inet filter forward-filter-chain log prefix "[nftables] : drop : forward : " counter drop comment "Log and count dropped packets";
+{%- endif %}
+
+
+#
+# ---------------------- RULES : ONLY OUTPUT ---------------------- #
+#
+
+# Drop Invalid Connections
+add rule inet filter output-filter-chain ct state { invalid } counter drop comment "Drop invalid packets"
+
+# Allow loopback
+add rule inet filter output-filter-chain oif lo accept comment "Accept connections to loopback"
+
+# Allow chain global
+add rule inet filter output-filter-chain jump global
+
+{% if nftables_output_ping_enable is true -%}
+# Allow ping
+add rule inet filter output-filter-chain meta nfproto ipv4 icmp type { echo-request } limit rate {{ nftables_output_ping_limit_rate }} counter accept comment "Accept IPv4 ICMP echo-request packets"
+{%- endif %}
+
+
+{% if nftables_output_chain_rules is defined -%}
+{% if nftables_output_chain_rules|length -%}
+# Allow declared rules
+{% for rule in nftables_output_chain_rules -%}
+add rule inet filter output-filter-chain {{ rule }}
+{% endfor %}
+{% endif %}
+{% endif %}
+
+{% if nftables_log_output_dropped is true %}
+# Log output dropped packets
+add rule inet filter output-filter-chain log prefix "[nftables] : drop : output : " counter drop comment "Log and count dropped packets";
+{%- endif %}

@@ -1,0 +1,5 @@
+{{ ansible_managed | comment }}
+
+#!/usr/sbin/nft -f
+
+include "{{ nftables_rules_directory_path }}/*.rules"

@@ -1,0 +1,67 @@
+- name: nftables_configure | Create directory for nftables rules
+  file:
+    path: "{{ nftables_rules_directory_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: nftables_configure | Clear deafult nft files with rules
+  file:
+    path: "/etc/nftables/{{ item }}"
+    state: absent
+  with_items:
+    - main.nft
+    - nat.nft
+    - router.nft
+  when: >
+    ansible_os_family | lower == "redhat"
+
+- name: nftables_configure | Deploy nftables config file
+  template:
+    src: templates/nftables.conf.j2
+    dest: "{{ nftables_config_path }}"
+    owner: root
+    group: root
+    mode: 0600
+  notify: Restart nftables service
+
+- name: nftables_configure | Create directory for nftables log files
+  file:
+    path: "{{ nftables_log_directory_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+  when: >
+    ansible_os_family | lower == "redhat"
+
+- name: nftables_configure | Create directory for nftables log files
+  file:
+    path: "{{ nftables_log_directory_path }}"
+    state: directory
+    owner: syslog
+    group: root
+    mode: 0700
+  when: >
+    ansible_os_family | lower == "debian"
+
+- name: nftables_configure | Set default ACL on archiv log directory
+  ansible.posix.acl:
+    path: "{{ nftables_log_directory_path }}"
+    etype: "{{ default_directory_acl_etype }}"
+    permissions: "{{ default_directory_acl_permissions }}"
+    default: true
+    state: present
+
+- name: nftables_configure | Deploy rsyslog nftables config file for nftables
+  template:
+    src: templates/rsyslog/nftables.conf.j2
+    dest: "{{ nftables_rsyslog_config_path }}"
+    owner: root
+    group: root
+    mode: 0600
+  notify: Restart rsyslog service
+
+- name: nftables_configure | Flush handlers
+  meta: flush_handlers

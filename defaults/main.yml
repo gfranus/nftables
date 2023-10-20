@@ -1,0 +1,69 @@
+### =======================
+### Default variables 
+
+default_log_directory_mode: 02750
+default_log_directory_group_name: root
+default_directory_acl_etype: user
+default_directory_acl_permissions: rwx
+
+
+### =======================
+### Reboot variables 
+
+default_reboot_message: 'Reboot initialized by Ansible'
+default_reboot_wait: 'yes'
+default_reboot_connect_timeout: 60
+default_reboot_wait_delay: 10
+default_reboot_wait_timeout: 300
+default_reboot_wait_ctimeout: 5
+default_reboot_interval: 'yes'
+default_reboot_interval_seconds: 5
+
+
+### =======================
+### General variables for role
+
+nftables_role_action: all
+nftables_configure_logrotate: true
+nftables_service_enabled: true
+nftables_reboot_required: false
+
+# logrotate related vars
+nftables_logrotate_options:
+  archiv_directory_path: /var/log/nftables
+  frequency: daily
+  count: 90
+
+
+### =======================
+### Configuration options for nftables
+
+# default policy
+nftables_input_default_policy: drop
+nftables_forward_default_policy: drop
+nftables_output_default_policy: drop
+
+# logging options
+nftables_log_input_dropped: true
+nftables_log_forward_dropped: true
+nftables_log_output_dropped: true
+
+# PING options
+nftables_input_ping_enable: true
+nftables_input_ping_limit_rate: "3/second"
+nftables_output_ping_enable: true
+nftables_output_ping_limit_rate: "6/second"
+
+# Input chain rules
+nftables_input_chain_rules:
+  - 'ip saddr 0.0.0.0/0 tcp dport { 22 } ct state { new } limit rate 10/minute log prefix "[nftables] : accept : input : ssh : " counter accept comment "ssh"'
+
+# # Forward chain rules
+# nftables_forward_chain_rules:
+#   - 
+
+# Output chain rules
+nftables_output_chain_rules:
+  - 'ip daddr 0.0.0.0/0 udp dport { 53 } ct state { new } counter accept comment "dns"'
+  - 'ip daddr 0.0.0.0/0 udp dport { 123 } ct state { new } counter accept comment "ntp"'
+  - 'ip daddr 0.0.0.0/0 tcp dport { 80,443 } ct state { new } log prefix "[nftables] : accept : output : http/https : " counter accept comment "system update"'
